@@ -9,6 +9,7 @@ __pycache__/
 # IDE/Editor files
 .mypy_cache/
 .vscode/
+.idea/
 
 # Project files to exclude
 ProjectTracker.md
