@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  # 1. PostgreSQL Database Service
+  db:
+    image: postgres:16-alpine
+    container_name: fitnessbud-postgres
+    # The database data will be stored in a volume named 'postgres_data'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      # Credentials used by the FastAPI app
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: mysecretpassword
+      POSTGRES_DB: fitnessbud_db
+    # Only expose port 5432 to the 'web' service, not the host machine
+
+  # 2. FastAPI Application Service
+  web:
+    build: . # Build using the Dockerfile in the current directory
+    container_name: fitnessbud-web
+    command: uvicorn api.main:app --host 0.0.0.0 --port 8000
+    volumes:
+      # Mount the local project directory to allow code changes without rebuilding
+      - .:/app
+    ports:
+      # Expose the FastAPI port to the host machine (access via http://localhost:8000)
+      - "8000:8000"
+    depends_on:
+      - db # Ensure the database starts before the web app
+    environment:
+      # CRITICAL FIX: The app connects to the DB using the container name as the host
+      DATABASE_URL: postgresql+asyncpg://postgres:mysecretpassword@db:5432/fitnessbud_db
+      # Set your debug flag if you have one
+      DEBUG: "True"
+      SECRET_KEY: "a-secure-key-for-docker-testing"
+
+# Define the volume for persistent database storage
+volumes:
+  postgres_data:

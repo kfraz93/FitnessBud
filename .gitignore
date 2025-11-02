@@ -1,0 +1,15 @@
+# Environments
+venv/
+.venv/
+
+# Pyproject/Python cache
+__pycache__/
+*.pyc
+
+# IDE/Editor files
+.mypy_cache/
+.vscode/
+
+# Project files to exclude
+ProjectTracker.md
+.env
