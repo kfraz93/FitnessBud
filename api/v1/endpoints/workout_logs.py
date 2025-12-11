@@ -1,11 +1,12 @@
-from fastapi import APIRouter, Depends, status, HTTPException
+from fastapi import APIRouter, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List
 
 from infrastructure.db import get_db_session
-from domain.schemas import WorkoutLogCreate, WorkoutLogOut, WorkoutLogUpdate, UserOut
-from domain.workout_log_service import WorkoutLogService
-from infrastructure.models import WorkoutLog  # For internal type hints
+from domain.workout.workout_schemas import WorkoutLogCreate, WorkoutLogOut, WorkoutLogUpdate
+from domain.user.user_schemas import UserOut
+from domain.workout.workout_log_service import WorkoutLogService
+from domain.workout.workout_models import WorkoutLog  # For internal type hints
 from api.deps import get_current_user
 
 router = APIRouter(

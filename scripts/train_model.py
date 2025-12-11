@@ -6,7 +6,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'src'))
 
 # Import the refactored functions
 from src.data_loader import load_and_prepare_data_for_goal_prediction
-from src.model_trainer import train_and_save_model
+from src.train_workout_model import train_and_save_model
 
 if __name__ == "__main__":
     print("Starting model training using modular architecture...")

@@ -77,7 +77,6 @@ async def create_db_and_tables():
     async with engine.begin() as conn:
         # We must import the models here so that the Base class
         # "discovers" them before we call create_all()
-        from infrastructure import models
 
         # This command tells SQLAlchemy to create all tables
         # that inherit from our 'Base' class.

@@ -4,10 +4,10 @@ from fastapi import HTTPException
 from pydantic import BaseModel, ConfigDict  # 🚨 Import BaseModel and ConfigDict
 
 # 🚨 Import WorkoutLogCreate for the warning fix
-from domain.schemas import  WorkoutLogBase, WorkoutLogCreate
+from domain.workout.workout_schemas import  WorkoutLogBase, WorkoutLogCreate
 import datetime
 
-from domain.workout_log_service import WorkoutLogService
+from domain.workout.workout_log_service import WorkoutLogService
 
 
 # Mock ORM object structure (mimics what SQLAlchemy returns)

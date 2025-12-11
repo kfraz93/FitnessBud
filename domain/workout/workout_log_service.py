@@ -2,10 +2,9 @@ from typing import List
 from fastapi import HTTPException, status
 
 # Domain Layer Imports
-from domain.schemas import WorkoutLogCreate, WorkoutLogUpdate, \
-    WorkoutLog as WorkoutLogOut
-from infrastructure.models import WorkoutLog
-from infrastructure.workout_log_repository import WorkoutLogRepository
+from domain.workout.workout_schemas import WorkoutLogCreate, WorkoutLogUpdate
+from domain.workout.workout_models import WorkoutLog
+from infrastructure.workout.workout_log_repository import WorkoutLogRepository
 
 
 class WorkoutLogService:

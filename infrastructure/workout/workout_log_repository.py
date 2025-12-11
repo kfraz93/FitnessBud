@@ -1,10 +1,10 @@
-from sqlalchemy import select, delete, update
+from sqlalchemy import select, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List, Optional
 
 # Local imports from Infrastructure and Domain
-from infrastructure.models import WorkoutLog
-from domain.schemas import WorkoutLogCreate, WorkoutLogUpdate
+from domain.workout.workout_models import WorkoutLog
+from domain.workout.workout_schemas import WorkoutLogCreate, WorkoutLogUpdate
 
 
 class WorkoutLogRepository:

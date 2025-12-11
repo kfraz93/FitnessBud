@@ -1,22 +1,20 @@
-from fastapi import Depends, HTTPException, status, Security
-from fastapi.security import OAuth2PasswordBearer
+from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
-from typing import Optional
+# Removed unnecessary imports: HTTPException, status, Request, Optional, UUID, TokenData
+
+# Import the core active user dependency from core.security. This replaces the need
+# for the custom token extraction and user ID decoding logic previously attempted.
+from core.security import get_current_active_user
 
 # Local imports
 from infrastructure.db import get_db_session
 
-from infrastructure.workout_log_repository import WorkoutLogRepository
-from domain.workout_log_service import WorkoutLogService
-from infrastructure.user_repository import UserRepository
-from domain.schemas import TokenData, UserOut
-from domain.auth_service import decode_access_token
-from infrastructure.models import User as UserModel
-
-# OAuth2PasswordBearer handles token extraction from the header.
-reusable_oauth2 = OAuth2PasswordBearer(
-    tokenUrl="/v1/auth/token"
-)
+from infrastructure.workout.workout_log_repository import WorkoutLogRepository
+from domain.workout.workout_log_service import WorkoutLogService
+from infrastructure.user.user_repository import UserRepository
+from domain.user.user_schemas import UserOut
+# We need to import the ORM model type to match the return type of get_current_active_user
+from domain.user.user_models import User as UserModel
 
 
 def get_user_repository(
@@ -25,40 +23,20 @@ def get_user_repository(
     return UserRepository(db_session=session)
 
 
-async def get_current_user(
-        # Get the raw JWT token string from the request header
-        token: str = Security(reusable_oauth2),
-        # Inject the repository dependency for database lookup
-        repo: UserRepository = Depends(get_user_repository),
+def get_current_user_out(
+        # Use the core dependency that handles token validation, activity check, and returns the ORM model
+        db_user: UserModel = Depends(get_current_active_user)
 ) -> UserOut:
     """
-    Decodes the JWT token, verifies the user, and returns the UserOut object.
-    Used as a dependency in all protected API endpoints.
+    Dependency to be used in API endpoints. It ensures the user is authenticated and active,
+    and converts the database model (UserModel) into the public schema (UserOut).
     """
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
-
-    # 1. Decode the token to get the user ID
-    token_data: Optional[TokenData] = decode_access_token(token=token)
-
-    if token_data is None:
-        raise credentials_exception
-
-    # 2. Look up the user in the database
-    db_user: UserModel | None = await repo.get_by_id(user_id=token_data.user_id)
-
-    # 3. Validation checks
-    if db_user is None:
-        raise credentials_exception
-
-    if not db_user.is_active:
-        raise HTTPException(status_code=400, detail="Inactive user")
-
-    # 4. Return the validated Pydantic model for use in the endpoint function
+    # The get_current_active_user dependency already raises 401/400 exceptions if the user is invalid or inactive.
     return UserOut.model_validate(db_user)
+
+# Alias the function to 'get_current_user' for backwards compatibility with API route dependencies.
+get_current_user = get_current_user_out
+
 
 def get_workout_log_repository(
         session: AsyncSession = Depends(get_db_session)) -> WorkoutLogRepository:
@@ -67,7 +45,7 @@ def get_workout_log_repository(
 
 
 def get_workout_log_service(
-        repository: WorkoutLogRepository = Depends(get_workout_log_repository)) -> WorkoutLogService:
+        repository: WorkoutLogRepository = Depends(
+            get_workout_log_repository)) -> WorkoutLogService:
     """Dependency that provides a WorkoutLogService instance, injecting the repository."""
-    # The service layer now receives the pre-configured repository instance.
     return WorkoutLogService(repository=repository)

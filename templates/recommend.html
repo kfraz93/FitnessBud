@@ -2,70 +2,240 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>FitnessBud Recommendation</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Fitness Goal Recommender</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    </head>
+    <style>
+        body { background-color: #f8f9fa; font-family: sans-serif; }
+        .card-shadow { box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); }
+        /* Style for the active tab (managed by Jinja logic and CSS classes) */
+        .running-section-btn {
+            background-color: #fff;
+            color: #198754;
+            border: 1px solid #198754;
+        }
+        .running-section-btn.active {
+            background-color: #198754; /* Green for success/running */
+            color: white;
+            font-weight: bold;
+        }
+        /* CSS to hide/show panes based on the active state set by Jinja */
+        .running-content-pane:not(.active) {
+            display: none;
+        }
+        /* Style for buttons that submit a simple form */
+        .form-button {
+            border: 1px solid #dee2e6;
+            cursor: pointer;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 1rem;
+            text-align: center;
+        }
+    </style>
+</head>
 <body class="p-4">
-    <div class="container">
-        <h1 class="mb-4">🏋️ FitnessBud Goal Predictor</h1>
-        <p class="lead">Submit a workout log to see the predicted user goal.</p>
+    <div class="container-lg">
+        <header class="mb-5 text-center">
+            <h1 class="display-5 fw-bold text-dark">AI Fitness Planner</h1>
+            <p class="lead text-muted">Welcome, {{ current_user.email }}.</p>
+        </header>
 
-        {% if error %}
-            <div class="alert alert-danger" role="alert">{{ error }}</div>
-        {% endif %}
+        <!-- 1. WORKOUT GOAL PREDICTOR SECTION (Original Functionality) -->
+        <div class="card p-4 card-shadow border-0 mb-5">
+            <h2 class="card-title h4 mb-4 pb-2 border-bottom text-primary">Workout Goal Predictor</h2>
+            <p class="text-muted">Enter details about a workout to receive a recommended fitness goal.</p>
 
-        <form method="post" action="/recommend">
-            <div class="row g-3">
-
-                <div class="col-md-6">
-                    <label for="workout_type" class="form-label">Workout Type:</label>
-                    <select name="workout_type" id="workout_type" class="form-select" required>
-                        {% for option in workout_type_options %}
-                            <option value="{{ option }}" {% if workout_type and workout_type == option %}selected{% endif %}>{{ option|replace('_', ' ')|title }}</option>
-                        {% endfor %}
-                    </select>
+            {% if error and not running_error %}
+                <div class="alert alert-danger" role="alert">
+                    <strong>Error:</strong> {{ error }}
                 </div>
+            {% endif %}
 
-                <div class="col-md-6">
-                    <label for="equipment" class="form-label">Equipment:</label>
-                    <select class="form-select" id="equipment" name="equipment" required>
-                        {% for option in equipment_options %}
-                            <option value="{{ option }}" {% if equipment and equipment == option %}selected{% endif %}>{{ option }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
+            <form method="POST" action="/recommend">
+                <!-- Current view hidden input to maintain context if prediction fails -->
+                <input type="hidden" name="current_view" value="{{ current_view }}">
+                <div class="row g-3">
+                    <!-- Workout Type -->
+                    <div class="col-md-6">
+                        <label for="workout_type" class="form-label">Workout Type:</label>
+                        <select name="workout_type" id="workout_type" class="form-select" required>
+                            {% for option in workout_type_options %}
+                                <option value="{{ option }}" {% if workout_type and workout_type == option %}selected{% endif %}>{{ option|replace('_', ' ')|title }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
 
-                <div class="col-md-6">
-                    <label for="intensity" class="form-label">Intensity:</label>
-                    <select class="form-select" id="intensity" name="intensity" required>
-                        {% for option in intensity_options %}
-                            <option value="{{ option }}" {% if intensity and intensity == option %}selected{% endif %}>{{ option }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
+                    <!-- Equipment -->
+                    <div class="col-md-6">
+                        <label for="equipment" class="form-label">Equipment:</label>
+                        <select class="form-select" id="equipment" name="equipment" required>
+                            {% for option in equipment_options %}
+                                <option value="{{ option }}" {% if equipment and equipment == option %}selected{% endif %}>{{ option|capitalize }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
 
-                <div class="col-md-6">
-                    <label for="duration_min" class="form-label">Duration (min):</label>
-                    <input type="number" class="form-control" id="duration_min" name="duration_min" value="{{ duration_min if duration_min is not none else '60' }}" required min="1">
-                </div>
+                    <!-- Intensity -->
+                    <div class="col-md-6">
+                        <label for="intensity" class="form-label">Intensity:</label>
+                        <select class="form-select" id="intensity" name="intensity" required>
+                            {% for option in intensity_options %}
+                                <option value="{{ option }}" {% if intensity and intensity == option %}selected{% endif %}>{{ option|capitalize }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
 
-                <div class="col-md-6">
-                    <label for="calories_burned" class="form-label">Calories Burned:</label>
-                    <input type="number" class="form-control" id="calories_burned" name="calories_burned" value="{{ calories_burned if calories_burned is not none else '450' }}" required min="1">
-                </div>
+                    <!-- Duration -->
+                    <div class="col-md-6">
+                        <label for="duration_min" class="form-label">Duration (min):</label>
+                        <input type="number" class="form-control" id="duration_min" name="duration_min" value="{{ duration_min if duration_min is not none else '60' }}" required min="1">
+                    </div>
 
-                <div class="col-12">
-                    <button type="submit" class="btn btn-primary mt-3">Get Recommendation</button>
+                    <!-- Calories Burned -->
+                    <div class="col-12">
+                        <label for="calories_burned" class="form-label">Calories Burned:</label>
+                        <input type="number" step="0.1" class="form-control" id="calories_burned" name="calories_burned" value="{{ calories_burned if calories_burned is not none else '450' }}" required min="1">
+                    </div>
+
+                    <div class="col-12 mt-4">
+                        <button type="submit" class="btn btn-primary w-100 btn-lg">
+                            Get Workout Goal Recommendation
+                        </button>
+                    </div>
                 </div>
+            </form>
+
+            {% if result %}
+                <div class="alert alert-success mt-4 p-3">
+                    <h5 class="fw-bold mb-1">Prediction Result:</h5>
+                    <p class="mb-0">{{ result }}</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- 2. RUNNING DATA HUB SECTION (No JS View Switching) -->
+        <div class="card p-4 card-shadow border-0">
+            <h2 class="card-title h4 mb-4 pb-2 border-bottom text-success">Running Data Hub</h2>
+            <p class="text-muted">Manage your running logs and get specific pace recommendations.</p>
+
+            <!-- Navigation Buttons (Forms that submit to /recommend with a 'view' parameter) -->
+            <div class="btn-group mb-4" role="group" aria-label="Running Functionality">
+                <form method="GET" action="/recommend" class="d-inline">
+                    <input type="hidden" name="view" value="log-run">
+                    <button type="submit" class="btn btn-outline-success running-section-btn {% if not current_view or current_view == 'log-run' %}active{% endif %}">
+                        Log New Run
+                    </button>
+                </form>
+                <form method="GET" action="/recommend" class="d-inline">
+                    <input type="hidden" name="view" value="view-history">
+                    <button type="submit" class="btn btn-outline-success running-section-btn {% if current_view == 'view-history' %}active{% endif %}">
+                        View Run History
+                    </button>
+                </form>
+                <form method="GET" action="/recommend" class="d-inline">
+                    <input type="hidden" name="view" value="predict-run">
+                    <button type="submit" class="btn btn-outline-success running-section-btn {% if current_view == 'predict-run' %}active{% endif %}">
+                        Get Run Recommendation
+                    </button>
+                </form>
             </div>
-        </form>
 
-        {% if result %}
-            <div class="alert alert-success mt-4 p-3">
-                <h4 class="alert-heading">Prediction Result:</h4>
-                <p class="mb-0">{{ result }}</p>
+            {% if running_error %}
+                <div class="alert alert-danger" role="alert">
+                    <strong>Running Error:</strong> {{ running_error }}
+                </div>
+            {% endif %}
+
+
+            <!-- Content Areas managed by Jinja 'current_view' variable -->
+            <div id="running-content">
+
+                <!-- Log New Run Form (Default View) -->
+                <div id="log-run" class="running-content-pane {% if not current_view or current_view == 'log-run' %}active{% endif %}">
+                    <h5 class="mb-3">Log a New Running Session</h5>
+                    <!-- This form POSTs to the dedicated logging endpoint (FastAPI) -->
+                    <form method="POST" action="/v1/running/logs" class="row g-3">
+                        <!-- Redirect hidden input to ensure user returns to the correct page/view -->
+                        <input type="hidden" name="redirect_to" value="/recommend?view=log-run&log_status=success">
+
+                        <div class="col-md-6">
+                            <label for="distance_km" class="form-label">Distance (km)</label>
+                            <input type="number" step="0.1" id="distance_km" name="distance_km" class="form-control" placeholder="e.g., 5.0" required min="0.1">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="duration_min_run" class="form-label">Duration (minutes)</label>
+                            <input type="number" step="0.1" id="duration_min_run" name="duration_min" class="form-control" placeholder="e.g., 30.5" required min="1">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="avg_heart_rate" class="form-label">Avg Heart Rate (BPM)</label>
+                            <input type="number" id="avg_heart_rate" name="avg_heart_rate" class="form-control" placeholder="e.g., 145" required min="50">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="run_type" class="form-label">Run Type</label>
+                            <select id="run_type" name="run_type" class="form-select" required>
+                                <option value="easy">Easy Run</option>
+                                <option value="tempo">Tempo Run</option>
+                                <option value="intervals">Intervals</option>
+                                <option value="long">Long Run</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-success mt-3">Submit Run Log</button>
+                        </div>
+                    </form>
+
+                    {% if log_status == 'success' %}
+                        <div class="alert alert-success mt-3">Run logged successfully!</div>
+                    {% endif %}
+                </div>
+
+                <!-- View Run History -->
+                <div id="view-history" class="running-content-pane {% if current_view == 'view-history' %}active{% endif %}">
+                    <h5 class="mb-3">Your Historical Running Data</h5>
+                    <div id="runHistoryDisplay">
+                        {% if run_history and run_history|length > 0 %}
+                            <ul class="list-group">
+                                {% for run in run_history|sort(attribute='log_date', reverse=True) %}
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h6 class="mb-1 text-primary">{{ run.distance_km }} km Run ({{ run.run_type|upper }})</h6>
+                                            <p class="mb-1 small">Pace: {{ run.pace_min_per_km }} min/km | Duration: {{ run.duration_min }} min</p>
+                                            <small class="text-muted">Date: {{ run.log_date|slice(10) }}</small>
+                                        </div>
+                                        <span class="badge bg-secondary rounded-pill">{{ run.avg_heart_rate }} BPM</span>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        {% else %}
+                            <div class="alert alert-info">You haven't logged any runs yet.</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Get Run Recommendation (Pace Prediction) -->
+                <div id="predict-run" class="running-content-pane {% if current_view == 'predict-run' %}active{% endif %}">
+                    <h5 class="mb-3">Get Pace Recommendation</h5>
+                    <p class="text-muted">Based on your recent performance, get a target pace for your next training run.</p>
+
+                    <!-- Form to trigger the prediction -->
+                    <form method="POST" action="/v1/running/fitness-score">
+                        <!-- Redirect hidden input to ensure user returns to the correct page/view -->
+                        <input type="hidden" name="redirect_to" value="/recommend?view=predict-run">
+                        <button type="submit" class="btn btn-warning">Predict Target Pace</button>
+                    </form>
+
+                    {% if running_prediction_result %}
+                        <div class="alert alert-info mt-3">
+                            <h5 class="fw-bold">Running Fitness Score: <span class="text-success">{{ running_prediction_result.fitness_score }}/100</span></h5>
+                            <p class="mb-1">{{ running_prediction_result.message }}</p>
+                            <p class="mb-0 small text-muted">A higher score indicates better recent performance.</p>
+                        </div>
+                    {% endif %}
+                </div>
+
             </div>
-        {% endif %}
+        </div>
     </div>
 </body>
 </html>

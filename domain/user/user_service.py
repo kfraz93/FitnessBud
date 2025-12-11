@@ -1,75 +1,72 @@
-from typing import Optional, List
-from fastapi import HTTPException, status
-from sqlalchemy.ext.asyncio import AsyncSession
+from typing import List, Optional
 
-from domain.auth_service import verify_password
+# Correctly import the unified hashing utility from core/security
+from core.security import get_password_hash
 
-from domain.schemas import UserCreate
-from domain import auth_service
-
-from infrastructure.user_repository import UserRepository
-from infrastructure.models import User
+# Assuming these models/schemas are defined elsewhere
+from domain.user.user_models import User
+from domain.user.user_schemas import UserCreate, UserUpdate
+from infrastructure.user.user_repository import UserRepository
 
 
 class UserService:
     """
-    Handles core user business logic, combining data access (Repository)
-    and authentication rules (Auth Service).
+    Business logic layer for User-related operations.
+    Relies on UserRepository for database interaction.
     """
 
-    def __init__(self, session: AsyncSession):
-        # The service layer holds the repository instance
-        self.repository = UserRepository(db_session=session)
+    def __init__(self, repository: UserRepository):
+        """Initializes the service with the injected UserRepository."""
+        self.repository = repository
 
-    async def create_new_user(self, user_in: UserCreate) -> User:
+    async def create_user(self, user_in: UserCreate) -> User:
         """
-        Creates a new user, hashes the password, and checks for email conflicts.
+        Creates a new user, hashing the password before saving.
         """
-        # 1. Check for existing user (Domain Rule)
-        existing_user = await self.repository.get_by_email(user_in.email)
+        # Check if user already exists (optional, but good practice)
+        existing_user = await self.repository.get_by_email(email=user_in.email)
         if existing_user:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail="Account with this email already exists."
-            )
+            # In a real FastAPI app, you would raise an HTTPException
+            raise ValueError("Email already registered.")
 
-        # 2. Hash the password (Domain Rule via Auth Service)
-        hashed_password = auth_service.hash_password(user_in.password)
+        # Hash the password using the utility from core/security
+        hashed_password = get_password_hash(user_in.password)
 
-        # 3. Save to database (Infrastructure/Repository)
-        db_user = await self.repository.create(
-            user_in=user_in,
-            hashed_password=hashed_password
+        db_user = User(
+            email=user_in.email,
+            hashed_password=hashed_password,
+            is_active=True,
+            is_superuser=False,
+            # Add other required fields from UserCreate model
+            age=user_in.age,
+            goal=user_in.goal,
+            equipment=user_in.equipment,
         )
 
-        await self.repository.db.commit()
-
-        return db_user
-
-    async def get_user_by_email(self, email: str) -> Optional[User]:
-        """Retrieves a user by email."""
-        return await self.repository.get_by_email(email)
+        return await self.repository.create(db_user)
 
     async def get_user_by_id(self, user_id: int) -> Optional[User]:
-        """Retrieves a user by ID."""
-        return await self.repository.get_by_id(user_id)
+        """Fetches a user by ID."""
+        return await self.repository.get_by_id(user_id=user_id)
+
+    async def get_user_by_email(self, email: str) -> Optional[User]:
+        """Fetches a user by email."""
+        return await self.repository.get_by_email(email=email)
+
+    async def update_user(self, user_id: int, user_update: UserUpdate) -> Optional[
+        User]:
+        """
+        Updates a user's details. Handles optional password hashing if provided.
+        """
+        update_data = user_update.model_dump(exclude_unset=True)
+
+        if 'password' in update_data:
+            # Hash new password if provided, using the core utility
+            update_data['hashed_password'] = get_password_hash(
+                update_data.pop('password'))
+
+        return await self.repository.update(user_id=user_id, update_data=update_data)
 
     async def get_all_users(self) -> List[User]:
-        """Retrieves all users (for administrative/testing purposes)."""
+        """Fetches all users."""
         return await self.repository.get_all()
-
-    async def authenticate_user(self, email: str, password: str) -> Optional[User]:
-        """Authenticates a user by email and password."""
-        db_user = await self.repository.get_by_email(email=email)
-
-        # 1. Check if user exists
-        if not db_user:
-            return None
-
-        # 2. Check if password is valid using the Auth Service
-        if not verify_password(plain_password=password,
-                               hashed_password=db_user.hashed_password):
-            return None
-
-        # 3. If credentials are valid, return the user model
-        return db_user
