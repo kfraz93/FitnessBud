@@ -1,9 +1,9 @@
+
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from typing import List, Optional
 
-from infrastructure.models import User
-from domain.schemas import UserCreate
+from domain.shared.schemas import UserCreate
+from infrastructure.orm_models import User
 
 
 class UserRepository:
@@ -35,19 +35,19 @@ class UserRepository:
 
         return db_user
 
-    async def get_by_id(self, user_id: int) -> Optional[User]:
+    async def get_by_id(self, user_id: int) -> User | None:
         """Fetches a User by their primary key ID."""
         # This executes a SELECT query: SELECT * FROM users WHERE id = :user_id
         result = await self.db.execute(select(User).where(User.id == user_id))
         return result.scalars().first()
 
-    async def get_by_email(self, email: str) -> Optional[User]:
+    async def get_by_email(self, email: str) -> User | None:
         """Fetches a User by their email address."""
         # Executes a SELECT query: SELECT * FROM users WHERE email = :email
         result = await self.db.execute(select(User).where(User.email == email))
         return result.scalars().first()
 
-    async def get_all(self) -> List[User]:
+    async def get_all(self) -> list[User]:
         """Fetches all User records."""
         result = await self.db.execute(select(User))
         return list(result.scalars().all())

@@ -1,12 +1,18 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter
+from fastapi import Depends
+from fastapi import HTTPException
+from fastapi import status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from domain.auth import (
+    auth_service,  # Used for password verification and token generation
+)
+from domain.shared.schemas import Token
+from domain.user.user_service import UserService
+
 # Local imports
 from infrastructure.db import get_db_session
-from domain.schemas import Token
-from domain.user_service import UserService
-from domain import auth_service  # Used for password verification and token generation
 
 router = APIRouter(
     prefix="/auth",
@@ -15,7 +21,7 @@ router = APIRouter(
 
 
 # Reuse the UserService dependency helper
-def get_user_service(session: AsyncSession = Depends(get_db_session)) -> UserService:
+def get_user_service(session: AsyncSession = Depends(get_db_session)) -> UserService:   # noqa: B008
     return UserService(session=session)
 
 
@@ -27,8 +33,8 @@ def get_user_service(session: AsyncSession = Depends(get_db_session)) -> UserSer
 )
 async def login_for_access_token(
         # FastAPI's built-in form to handle 'username' (which is our email) and 'password'
-        form_data: OAuth2PasswordRequestForm = Depends(),
-        user_service: UserService = Depends(get_user_service)
+        form_data: OAuth2PasswordRequestForm = Depends(),    # noqa: B008
+        user_service: UserService = Depends(get_user_service)  # noqa: B008
 ):
     """
     Verifies user credentials. If valid, generates and returns an access token.

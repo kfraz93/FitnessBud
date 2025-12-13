@@ -1,12 +1,18 @@
 import datetime
-from typing import AsyncGenerator
-from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
-from sqlalchemy import text, DateTime, pool
+from collections.abc import AsyncGenerator
+
+from sqlalchemy import DateTime
+from sqlalchemy import pool
+from sqlalchemy import text
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.ext.asyncio import async_sessionmaker
+from sqlalchemy.ext.asyncio import create_async_engine
+from sqlalchemy.orm import DeclarativeBase
+from sqlalchemy.orm import Mapped
+from sqlalchemy.orm import mapped_column
 
 # Import application settings from the core layer
 from core.config import settings
-
 
 # 1. Base Class for ORM Models
 
@@ -77,7 +83,6 @@ async def create_db_and_tables():
     async with engine.begin() as conn:
         # We must import the models here so that the Base class
         # "discovers" them before we call create_all()
-        from infrastructure import models
 
         # This command tells SQLAlchemy to create all tables
         # that inherit from our 'Base' class.

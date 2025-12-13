@@ -15,7 +15,7 @@ Database: SQLAlchemy (ORM), SQLite/PostgreSQL
 
 Authentication: JWT (JSON Web Tokens)
 
-Machine Learning: scikit-learn, joblib/pickle
+Machine Learning: scikit-learn, joblib
 
 Frontend (Phase 4): Jinja2 Templates, Bootstrap, Chart.js
 
@@ -42,6 +42,10 @@ This project uses **uv** for fast dependency management and **Pylance/MyPy** for
 3. **Install Dependencies (Using uv):**
    ```bash
 
+4. **Training the Workout model
+   ```bash
+   python -m scripts.train_model
+   ```
 # Use uv add for all dependencies
 
 uv add fastapi uvicorn passlib python-jose[cryptography] sqlalchemy asyncpg pydantic-settings
@@ -85,7 +89,7 @@ Verify by navigating to `http://127.0.0.1:8000/docs`
 | [x]    | 1. Implement JWT authentication (register, login, refresh).        | Services and endpoints for secure token generation and handling. **(Completed: Registration, Login, and Token Generation are working end-to-end)**                                                                                                                           |
 | [x]    | 2. Add CRUD endpoints for user workout logs.                       | Allow authenticated users to create, read, update, and delete logs. **(Completed: Secured endpoints and underlying service/repository logic)**                                                                                                                               |
 | [x]    | 3. Integrate SQLAlchemy repositories and service layer logic.      | Implement the repository interfaces defined in the domain core. **(Completed)**                                                                                                                                                                                              |
-| [ ]    | 4. Write unit tests with pytest for API routes and business logic. | Focus on testability enabled by Hexagonal Architecture.                                                                                                                                                                                                                      |
+| [x]    | 4. Write unit tests with pytest for API routes and business logic. | Focus on testability enabled by Hexagonal Architecture.                                                                                                                                                                                                                      |
 | [ ]    | 5. Implement GitHub Actions workflow for test automation.          | CI/CD setup for running tests on push/PR.                                                                                                                                                                                                                                    |
 | [x]    | 6. FIX: Environmental/Date Serialization Bug                       | Identified critical bug where SQLite could not handle datetime.date objects with async sessions, causing a silent 500 error. FIXED by migrating to PostgreSQL via Docker Compose, eliminating all environment and connection conflicts and validating all dependency chains. |
 

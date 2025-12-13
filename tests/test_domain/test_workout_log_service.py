@@ -1,13 +1,15 @@
-import pytest
+import datetime
 from unittest.mock import AsyncMock
+
+import pytest
 from fastapi import HTTPException
-from pydantic import BaseModel, ConfigDict  # 🚨 Import BaseModel and ConfigDict
+from pydantic import BaseModel  # 🚨 Import BaseModel and ConfigDict
+from pydantic import ConfigDict  # 🚨 Import BaseModel and ConfigDict
 
 # 🚨 Import WorkoutLogCreate for the warning fix
-from domain.schemas import  WorkoutLogBase, WorkoutLogCreate
-import datetime
-
-from domain.workout_log_service import WorkoutLogService
+from domain.shared.schemas import WorkoutLogBase
+from domain.shared.schemas import WorkoutLogCreate
+from domain.workout.workout_log_service import WorkoutLogService
 
 
 # Mock ORM object structure (mimics what SQLAlchemy returns)

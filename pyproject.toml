@@ -25,9 +25,12 @@ dependencies = [
     "pydantic-settings>=2.11.0",
     "pytest>=8.4.2",
     "pytest-asyncio>=1.2.0",
+    "pytest-mypy>=1.0.1",
+    "pytest-ruff>=0.5",
     "python-dotenv>=1.1.1",
     "python-jose[cryptography]>=3.5.0",
     "python-multipart>=0.0.20",
+    "ruff>=0.14.8",
     "scikit-learn>=1.7.2",
     "sqlalchemy>=2.0.44",
     "uvicorn>=0.37.0",
@@ -43,3 +46,62 @@ asyncio_mode = "auto"
 testpaths = "tests"
 # Standard naming convention for test files
 python_files = "test_*.py"
+
+[tool.ruff]
+# The target Python version for code generation and analysis.
+# Should match your project's requires-python.
+target-version = "py312"
+line-length = 88
+
+# Directory and file exclusions
+exclude = [
+    ".git",
+    "__pycache__",
+    "alembic", # Exclude migration files
+    "venv",
+    ".venv",
+]
+
+
+[tool.ruff.lint]
+# Set of checks to enable:
+# F - Pyflakes (catches unused imports, undeclared names, redefinition of names)
+# E/W - flake8 (standard linting rules)
+# I - isort (sorts imports, which can expose circular dependencies)
+# UP - pyupgrade (modernizes syntax)
+# N - pep8-naming (enforces naming conventions)
+# S - bandit (basic security checks)
+# B - bugbear (detects common design flaws/bugs)
+# SIM - Simplification checks
+select = ["F", "E", "W", "I", "UP", "N", "S", "B", "SIM", "TID"]
+
+# Ignore specific rules if they conflict with your style (e.g., D for docstrings)
+ignore = [
+    "E501", # Handled by line-length 100 above, but sometimes useful to ignore explicitly
+    "S101", # Use of assert (often ignored in tests)
+]
+
+[tool.ruff.lint.isort]
+# Tells ruff how to structure your imports.
+# This helps identify imports that break domain layers.
+force-single-line = true
+known-first-party = ["api", "core", "domain", "infrastructure", "models", "scripts", "src", "templates", "test"]
+
+
+[tool.mypy]
+# To silence hundreds of "missing type annotation" errors.
+strict = false
+
+# Ignore errors from third-party libraries that lack type stubs (e.g., joblib, sklearn, jose, passlib).
+ignore_missing_imports = true
+
+files = [
+    "api/",
+    "core/",
+    "domain/",
+    "infrastructure/",
+    "tests/"
+]
+
+# This resolves the "Source file found twice" error by enforcing the package structure.
+explicit_package_bases = true

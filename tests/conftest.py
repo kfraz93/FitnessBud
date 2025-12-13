@@ -1,6 +1,7 @@
 import pytest
-from core.config import Settings
 from dotenv import load_dotenv
+
+from core.config import Settings
 
 load_dotenv(dotenv_path='./.env.test', override=True)
 

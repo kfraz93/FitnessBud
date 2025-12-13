@@ -1,11 +1,15 @@
-from datetime import timedelta, datetime, timezone
-from typing import Optional
-from jose import jwt, JWTError
+from datetime import UTC
+from datetime import datetime
+from datetime import timedelta
+
+from jose import JWTError
+from jose import jwt
 from passlib.context import CryptContext
 
 # Local imports
 from core.config import settings
-from domain.schemas import TokenData, Token
+from domain.shared.schemas import Token
+from domain.shared.schemas import TokenData
 
 # Password Hashing Context
 pwd_context = CryptContext(schemes=["sha256_crypt"], deprecated="auto")
@@ -23,12 +27,12 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 
 
 # JWT Token Generation and Decoding (Remains the same)
-def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
+def create_access_token(data: dict, expires_delta: timedelta | None = None):
     to_encode = data.copy()
     if expires_delta:
-        expire = datetime.now(timezone.utc) + expires_delta
+        expire = datetime.now(UTC) + expires_delta
     else:
-        expire = datetime.now(timezone.utc) + timedelta(
+        expire = datetime.now(UTC) + timedelta(
             minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     to_encode.update({"exp": expire, "sub": str(data.get("user_id"))})
     encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY,
@@ -41,10 +45,10 @@ def get_auth_tokens(user_id: int) -> Token:
     access_token = create_access_token(
         data={"user_id": user_id}, expires_delta=access_token_expires
     )
-    return Token(access_token=access_token, token_type="bearer")
+    return Token(access_token=access_token, token_type="bearer") # noqa: S106
 
 
-def decode_access_token(token: str) -> Optional[TokenData]:
+def decode_access_token(token: str) -> TokenData | None:
     try:
         payload = jwt.decode(
             token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]

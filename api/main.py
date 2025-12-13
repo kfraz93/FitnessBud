@@ -1,15 +1,24 @@
-from fastapi import FastAPI, Form, Request
-from fastapi.templating import Jinja2Templates
+from contextlib import asynccontextmanager
+
+from fastapi import FastAPI
+from fastapi import Form
+from fastapi import Request
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
-from contextlib import asynccontextmanager
+from fastapi.templating import Jinja2Templates
+
+from api.v1.endpoints import auth
+
+# 1. Import the new routers from the endpoints directory
+from api.v1.endpoints import users
+from api.v1.endpoints import workout_logs
 
 # Local imports
 from core.config import settings
 from infrastructure.db import create_db_and_tables
-# 1. Import the new routers from the endpoints directory
-from api.v1.endpoints import users, auth, workout_logs
-from infrastructure.ml_adapter import load_model, predict_goal
+from infrastructure.ml_adapter import load_model
+from infrastructure.ml_adapter import predict_goal
+
 # Define valid workout types (based on your limited training data)
 VALID_WORKOUT_TYPES = ["deadlift", "running", "bench_press", "yoga", "cycling"]
 

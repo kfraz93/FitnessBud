@@ -1,10 +1,13 @@
-from sqlalchemy import select, delete, update
+
+from sqlalchemy import delete
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from typing import List, Optional
+
+from domain.shared.schemas import WorkoutLogCreate
+from domain.shared.schemas import WorkoutLogUpdate
 
 # Local imports from Infrastructure and Domain
-from infrastructure.models import WorkoutLog
-from domain.schemas import WorkoutLogCreate, WorkoutLogUpdate
+from infrastructure.orm_models import WorkoutLog
 
 
 class WorkoutLogRepository:
@@ -52,7 +55,7 @@ class WorkoutLogRepository:
             traceback.print_exc()
             raise e  # Re-raise the exception to send the 500 error back
 
-    async def get_by_id(self, log_id: int, user_id: int) -> Optional[WorkoutLog]:
+    async def get_by_id(self, log_id: int, user_id: int) -> WorkoutLog | None:
         """
         Fetches a specific WorkoutLog by ID, ensuring it belongs to the given user.
         This provides row-level security.
@@ -64,7 +67,7 @@ class WorkoutLogRepository:
         result = await self.db.execute(stmt)
         return result.scalars().first()
 
-    async def get_all_by_user(self, user_id: int) -> List[WorkoutLog]:
+    async def get_all_by_user(self, user_id: int) -> list[WorkoutLog]:
         """Fetches all WorkoutLogs for a specific user."""
         stmt = select(WorkoutLog).where(
             WorkoutLog.user_id == user_id
@@ -74,7 +77,7 @@ class WorkoutLogRepository:
         return list(result.scalars().all())
 
     async def update(self, log_id: int, user_id: int, log_update: WorkoutLogUpdate) -> \
-            Optional[WorkoutLog]:
+            WorkoutLog | None:
         """Updates an existing WorkoutLog for a specific user."""
 
         # 1. Fetch the existing log, ensuring ownership
@@ -105,6 +108,4 @@ class WorkoutLogRepository:
         result = await self.db.execute(stmt)
 
         # Check if any row was actually deleted
-        if result.rowcount > 0:
-            return True
-        return False
+        return result.rowcount > 0

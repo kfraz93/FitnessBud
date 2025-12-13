@@ -1,10 +1,17 @@
-from typing import List, Optional
-from sqlalchemy.orm import relationship, Mapped, mapped_column
-from sqlalchemy import String, Integer, Float, ForeignKey, Boolean, DateTime, Date
 import datetime
 
-from infrastructure.db import Base
+from sqlalchemy import Boolean
+from sqlalchemy import Date
+from sqlalchemy import DateTime
+from sqlalchemy import Float
+from sqlalchemy import ForeignKey
+from sqlalchemy import Integer
+from sqlalchemy import String
+from sqlalchemy.orm import Mapped
+from sqlalchemy.orm import mapped_column
+from sqlalchemy.orm import relationship
 
+from infrastructure.db import Base
 
 # SQLAlchemy ORM Models (Persistence Adapter)
 
@@ -28,7 +35,7 @@ class User(Base):
     equipment: Mapped[str] = mapped_column(String(100))
 
     # Relationships (Link to Workout Logs)
-    logs: Mapped[List["WorkoutLog"]] = relationship(
+    logs: Mapped[list["WorkoutLog"]] = relationship(
         "WorkoutLog",
         back_populates="user",
         cascade="all, delete-orphan"
@@ -55,7 +62,7 @@ class WorkoutLog(Base):
     duration_min: Mapped[int] = mapped_column(Integer)
     intensity: Mapped[str] = mapped_column(String(50))
     workout_type: Mapped[str] = mapped_column(String(50))
-    calories_burned: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    calories_burned: Mapped[float | None] = mapped_column(Float, nullable=True)
 
     # Relationships (Link back to the User)
     user: Mapped["User"] = relationship("User", back_populates="logs")

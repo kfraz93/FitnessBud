@@ -1,7 +1,10 @@
-from typing import Optional
-from datetime import datetime, date
-from pydantic import BaseModel, ConfigDict, Field, EmailStr
+from datetime import date
+from datetime import datetime
 
+from pydantic import BaseModel
+from pydantic import ConfigDict
+from pydantic import EmailStr
+from pydantic import Field
 
 # Pydantic Schemas (Data Transfer Objects - DTOs)
 # These represent the data structures used by our core business logic and API endpoints.
@@ -49,7 +52,7 @@ class WorkoutLogBase(BaseModel):
     workout_type: str = Field(..., max_length=50,
                               description="e.g., Strength, Cardio, Yoga",
                               )
-    calories_burned: Optional[float] = Field(None, gt=0)
+    calories_burned: float | None = Field(None, gt=0)
 
 
 class WorkoutLogCreate(WorkoutLogBase):
@@ -60,12 +63,13 @@ class WorkoutLogCreate(WorkoutLogBase):
 
 class WorkoutLogUpdate(BaseModel):
     """Schema for updating a workout log (all fields are optional for partial updates)."""
-    intensity: Optional[str] = Field(None, description="e.g., Low, Medium, High")
-    duration_min: Optional[int] = Field(None, gt=0)
-    workout_type: Optional[str] = Field(None,
+    intensity: str | None = Field(None, description="e.g., Low, Medium, High")
+    duration_min: int | None = Field(None, gt=0)
+    workout_type: str | None = Field(None,
                                         description="e.g., Cardio, Strength, Yoga")
-    equipment_used: Optional[str] = Field(None,
+    equipment_used: str | None = Field(None,
                                           description="e.g., Dumbbells, Mat, None")
+    calories_burned: float | None = Field(None, gt=0)
 
 
 class WorkoutLogOut(WorkoutLogBase):
@@ -90,7 +94,7 @@ class WorkoutLog(WorkoutLogBase):
 class Token(BaseModel):
     """Schema for the JWT response body sent to the client."""
     access_token: str
-    token_type: str = "bearer"
+    token_type: str = "bearer"  # noqa: S105
 
 
 class TokenData(BaseModel):

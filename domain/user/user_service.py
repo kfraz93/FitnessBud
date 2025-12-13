@@ -1,14 +1,13 @@
-from typing import Optional, List
-from fastapi import HTTPException, status
+
+from fastapi import HTTPException
+from fastapi import status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from domain.auth_service import verify_password
-
-from domain.schemas import UserCreate
-from domain import auth_service
-
-from infrastructure.user_repository import UserRepository
-from infrastructure.models import User
+from domain.auth import auth_service
+from domain.auth.auth_service import verify_password
+from domain.shared.schemas import UserCreate
+from infrastructure.orm_models import User
+from infrastructure.user.user_repository import UserRepository
 
 
 class UserService:
@@ -46,19 +45,19 @@ class UserService:
 
         return db_user
 
-    async def get_user_by_email(self, email: str) -> Optional[User]:
+    async def get_user_by_email(self, email: str) -> User | None:
         """Retrieves a user by email."""
         return await self.repository.get_by_email(email)
 
-    async def get_user_by_id(self, user_id: int) -> Optional[User]:
+    async def get_user_by_id(self, user_id: int) -> User | None:
         """Retrieves a user by ID."""
         return await self.repository.get_by_id(user_id)
 
-    async def get_all_users(self) -> List[User]:
+    async def get_all_users(self) -> list[User]:
         """Retrieves all users (for administrative/testing purposes)."""
         return await self.repository.get_all()
 
-    async def authenticate_user(self, email: str, password: str) -> Optional[User]:
+    async def authenticate_user(self, email: str, password: str) -> User | None:
         """Authenticates a user by email and password."""
         db_user = await self.repository.get_by_email(email=email)
 

@@ -1,5 +1,6 @@
-import pandas as pd
 import os
+
+import pandas as pd
 
 DATA_FILE_PATH = 'models/synthetic_workout_data.csv'
 

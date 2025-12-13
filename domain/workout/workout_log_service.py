@@ -1,11 +1,12 @@
-from typing import List
-from fastapi import HTTPException, status
+
+from fastapi import HTTPException
+from fastapi import status
 
 # Domain Layer Imports
-from domain.schemas import WorkoutLogCreate, WorkoutLogUpdate, \
-    WorkoutLog as WorkoutLogOut
-from infrastructure.models import WorkoutLog
-from infrastructure.workout_log_repository import WorkoutLogRepository
+from domain.shared.schemas import WorkoutLogCreate
+from domain.shared.schemas import WorkoutLogUpdate
+from infrastructure.orm_models import WorkoutLog
+from infrastructure.workout.workout_log_repository import WorkoutLogRepository
 
 
 class WorkoutLogService:
@@ -40,7 +41,7 @@ class WorkoutLogService:
             )
         return db_log
 
-    async def get_all_logs_by_user(self, user_id: int) -> List[WorkoutLog]:
+    async def get_all_logs_by_user(self, user_id: int) -> list[WorkoutLog]:
         """Fetches all logs for a user."""
         return await self.repository.get_all_by_user(user_id=user_id)
 

@@ -1,11 +1,16 @@
-from fastapi import APIRouter, Depends, status, Body
+from fastapi import APIRouter
+from fastapi import Body
+from fastapi import Depends
+from fastapi import status
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from domain.shared.schemas import UserCreate
+from domain.shared.schemas import UserOut
+from domain.user.user_service import UserService
 
 # Local imports
 from infrastructure.db import get_db_session
-from domain.schemas import UserCreate, UserOut
-from domain.user_service import UserService
-from infrastructure.models import User  # For return type hint
+from infrastructure.orm_models import User  # For return type hint
 
 router = APIRouter(
     prefix="/users",
@@ -14,7 +19,7 @@ router = APIRouter(
 
 
 # Dependency injection for the User Service
-def get_user_service(session: AsyncSession = Depends(get_db_session)) -> UserService:
+def get_user_service(session: AsyncSession = Depends(get_db_session)) -> UserService:    # noqa: B008
     """Provides a UserService instance initialized with a database session."""
     return UserService(session=session)
 
@@ -27,9 +32,9 @@ def get_user_service(session: AsyncSession = Depends(get_db_session)) -> UserSer
 )
 async def register_user(
         # Use Body(...) to ensure the schema is applied to the request body
-        user_in: UserCreate = Body(...,
+        user_in: UserCreate = Body(...,    # noqa: B008
                                    description="Details for user registration and ML profile."),
-        user_service: UserService = Depends(get_user_service)
+        user_service: UserService = Depends(get_user_service)  # noqa: B008
 ):
     """
     Handles user registration.
