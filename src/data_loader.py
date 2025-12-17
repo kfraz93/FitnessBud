@@ -33,3 +33,11 @@ def load_and_prepare_data_for_goal_prediction():
     all_features = all_features.drop(columns=['intensity'])
 
     return all_features, target_variable
+
+def get_running_data_file_path() -> str:
+    """
+    Returns the file path for the raw running data used to train the pace predictor.
+    This path should be relative to the project root when the script is run.
+    """
+    # NOTE: This path is hardcoded based on the assumed location of your training data file.
+    return "models/strava_data.xlsx"

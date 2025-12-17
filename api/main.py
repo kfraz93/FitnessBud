@@ -8,32 +8,42 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
 from api.v1.endpoints import auth
-
 # 1. Import the new routers from the endpoints directory
 from api.v1.endpoints import users
 from api.v1.endpoints import workout_logs
+from api.v1.endpoints import running_logs  # <-- NEW: Import the running logs router
 
 # Local imports
 from core.config import settings
 from infrastructure.db import create_db_and_tables
-from infrastructure.ml_adapter import load_model
-from infrastructure.ml_adapter import predict_goal
+
+# ML Adapters
+from infrastructure.ml_workout_adapter import \
+    load_model as load_workout_model  # <-- Renamed for clarity
+from infrastructure.ml_workout_adapter import predict_goal
+from infrastructure import \
+    ml_running_adapter
 
 # Define valid workout types (based on your limited training data)
 VALID_WORKOUT_TYPES = ["deadlift", "running", "bench_press", "yoga", "cycling"]
+
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     """
     Handles startup and shutdown events for the FastAPI application.
-    Ensures the database tables are created on startup.
+    Ensures the database tables are created on startup and models are loaded.
     """
     # --- On Application Startup ---
     print("Application startup: Creating database tables...")
     await create_db_and_tables()
     print("Application startup: Database tables created successfully.")
 
-    load_model()
+    # Load both ML models during startup (Lifespan Hook)
+    print("Application startup: Loading ML Models...")
+    load_workout_model()  # Workout Model
+    ml_running_adapter.load_model()  # <-- NEW: Running Pace Model
+
     yield  # The application runs here
 
     # --- On Application Shutdown ---
@@ -52,6 +62,9 @@ app = FastAPI(
 app.include_router(users.router, prefix="/v1")
 app.include_router(auth.router, prefix="/v1")
 app.include_router(workout_logs.router, prefix="/v1")
+app.include_router(running_logs.router,
+                   prefix="/v1")  # <-- NEW: Include the running logs router
+
 
 # Root endpoint for basic verification
 @app.get("/info")
@@ -79,7 +92,7 @@ async def get_recommendation_form(request: Request):
         "recommend.html",
         {"request": request, "equipment_options": valid_equipment,
          "intensity_options": valid_intensity,
-         "workout_type_options": VALID_WORKOUT_TYPES, # ADD THIS
+         "workout_type_options": VALID_WORKOUT_TYPES,
          "result": None}
     )
 
@@ -96,25 +109,22 @@ async def post_recommendation(
     """Handles the form submission and returns the predicted goal."""
 
     # 1. Input Validation (CRITICAL STEP FOR USABILITY)
-    # The form input must be constrained to the domain values.
-    # We constrain it here using the same lists as the GET route.
     valid_equipment = ["full_gym", "home_gym", "yoga_mat", "none"]
     valid_intensity = ["very_low", "low", "moderate", "high"]
-    valid_workout_types = VALID_WORKOUT_TYPES  # USE THE DEFINED LIST
+    valid_workout_types = VALID_WORKOUT_TYPES
 
     if (equipment not in valid_equipment or intensity not in valid_intensity or
-            workout_type not in valid_workout_types):  # ADD THIS CHECK
+            workout_type not in valid_workout_types):
         error_message = "Invalid selection for workout type, equipment, or intensity."
         return templates.TemplateResponse(
             "recommend.html",
             {"request": request, "error": error_message,
              "equipment_options": valid_equipment, "intensity_options": valid_intensity,
-             "workout_type_options": valid_workout_types,  # ADD THIS
+             "workout_type_options": valid_workout_types,
              "result": None}
         )
 
-    # 2. Call your ML Service (Adapt this to call your Hexagonal ML domain/service)
-
+    # 2. Call your ML Service
     try:
         predicted_goal = predict_goal(workout_type, equipment, intensity, duration_min,
                                       calories_burned)

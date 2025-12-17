@@ -9,7 +9,7 @@ from pydantic import Field
 # Pydantic Schemas (Data Transfer Objects - DTOs)
 # These represent the data structures used by our core business logic and API endpoints.
 
-# User Schemas
+# --- User Schemas ---
 
 class UserBase(BaseModel):
     """Base fields for a user (used for input/creation)."""
@@ -40,11 +40,10 @@ class UserOut(UserBase):
     model_config = ConfigDict(from_attributes=True)
 
 
-#  Workout Log Schemas
+# --- Workout Log Schemas ---
 
 class WorkoutLogBase(BaseModel):
     """Base fields for a workout log."""
-    # Data validation ensures duration is positive
     workout_date: date = Field(...,
                                description="The date the workout was performed (YYYY-MM-DD).")
     duration_min: int = Field(..., gt=0)
@@ -57,7 +56,6 @@ class WorkoutLogBase(BaseModel):
 
 class WorkoutLogCreate(WorkoutLogBase):
     """Schema for creating a new log (used in API request bodies)."""
-    # No extra fields needed, inherits all necessary fields from Base
     pass
 
 
@@ -90,6 +88,55 @@ class WorkoutLog(WorkoutLogBase):
 
     model_config = {'from_attributes': True}
 
+
+# --- Running Log Schemas (New) ---
+
+class RunningLogBase(BaseModel):
+    """Base fields for a running log."""
+    # Renamed log_date to running_date for consistency with workout_date
+    running_date: date = Field(...,
+                                description="The date the run was performed (YYYY-MM-DD).")
+    distance_km: float = Field(..., gt=0, description="Distance in kilometers.")
+    duration_min: float = Field(..., gt=0, description="Duration in minutes.")
+    avg_heart_rate: int | None = Field(None, gt=0, description="Average heart rate during the run.")
+    run_type: str = Field("Easy", description="e.g., Easy, Tempo, Interval.")
+
+
+class RunningLogCreate(RunningLogBase):
+    """Schema for creating a new running log (used in API request bodies)."""
+    pass
+
+
+class RunningLogUpdate(BaseModel):
+    """Schema for updating a running log (all fields are optional for partial updates)."""
+    running_date: date | None = Field(None, description="The date the run was performed (YYYY-MM-DD).")
+    distance_km: float | None = Field(None, gt=0, description="Distance in kilometers.")
+    duration_min: float | None = Field(None, gt=0, description="Duration in minutes.")
+    avg_heart_rate: int | None = Field(None, gt=0, description="Average heart rate during the run.")
+    run_type: str | None = Field(None, description="e.g., Easy, Tempo, Interval.")
+
+
+class RunningLogOut(RunningLogBase):
+    """Schema for returning a running log record, including generated IDs, timestamps, and calculated pace."""
+    id: int
+    user_id: int
+    pace_min_per_km: float # This field is calculated, but included in the response
+    created_at: datetime
+    updated_at: datetime
+    model_config = ConfigDict(from_attributes=True)
+
+
+class RunningLog(RunningLogBase):
+    """Schema for reading a running log (including metadata)."""
+    id: int
+    user_id: int
+    pace_min_per_km: float
+    created_at: datetime
+    updated_at: datetime
+    model_config = {'from_attributes': True}
+
+
+# --- Auth Schemas ---
 
 class Token(BaseModel):
     """Schema for the JWT response body sent to the client."""

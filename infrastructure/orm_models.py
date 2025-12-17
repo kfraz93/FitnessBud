@@ -13,6 +13,7 @@ from sqlalchemy.orm import relationship
 
 from infrastructure.db import Base
 
+
 # SQLAlchemy ORM Models (Persistence Adapter)
 
 class User(Base):
@@ -21,8 +22,14 @@ class User(Base):
 
     # CORE FIELDS (Including Primary Key and Timestamps)
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    created_at: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True), default=datetime.datetime.now(datetime.UTC))
-    updated_at: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True), default=datetime.datetime.now(datetime.UTC), onupdate=datetime.datetime.now(datetime.UTC))
+    created_at: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True),
+                                                          default=datetime.datetime.now(
+                                                              datetime.UTC))
+    updated_at: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True),
+                                                          default=datetime.datetime.now(
+                                                              datetime.UTC),
+                                                          onupdate=datetime.datetime.now(
+                                                              datetime.UTC))
 
     # Authentication and Core Fields
     email: Mapped[str] = mapped_column(String(255), unique=True, index=True)
@@ -34,9 +41,15 @@ class User(Base):
     goal: Mapped[str] = mapped_column(String(50))
     equipment: Mapped[str] = mapped_column(String(100))
 
-    # Relationships (Link to Workout Logs)
+    # --- Relationships ---
     logs: Mapped[list["WorkoutLog"]] = relationship(
         "WorkoutLog",
+        back_populates="user",
+        cascade="all, delete-orphan"
+    )
+    # NEW RELATIONSHIP FOR RUNNING LOGS
+    running_logs: Mapped[list["RunningLog"]] = relationship(
+        "RunningLog",
         back_populates="user",
         cascade="all, delete-orphan"
     )
@@ -49,23 +62,64 @@ class WorkoutLog(Base):
     """SQLAlchemy Model for the 'workout_logs' table."""
     __tablename__ = "workout_logs"
 
-    # CORE FIELDS (Including Primary Key and Timestamps)
+    # CORE FIELDS
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    created_at: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True), default=datetime.datetime.now(datetime.UTC))
-    updated_at: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True), default=datetime.datetime.now(datetime.UTC), onupdate=datetime.datetime.now(datetime.UTC))
-    workout_date: Mapped[datetime.date] = mapped_column(
-        Date)  # Import 'Date' from sqlalchemy
-    # Foreign Key linking back to the User model
+    created_at: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True),
+                                                          default=datetime.datetime.now(
+                                                              datetime.UTC))
+    updated_at: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True),
+                                                          default=datetime.datetime.now(
+                                                              datetime.UTC),
+                                                          onupdate=datetime.datetime.now(
+                                                              datetime.UTC))
+    workout_date: Mapped[datetime.date] = mapped_column(Date)
+
+    # Foreign Key
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
 
-    # Log details (Fields matching Pydantic schema)
+    # Log details
     duration_min: Mapped[int] = mapped_column(Integer)
     intensity: Mapped[str] = mapped_column(String(50))
     workout_type: Mapped[str] = mapped_column(String(50))
     calories_burned: Mapped[float | None] = mapped_column(Float, nullable=True)
 
-    # Relationships (Link back to the User)
+    # Relationship
     user: Mapped["User"] = relationship("User", back_populates="logs")
 
     def __repr__(self):
         return f"<WorkoutLog(id={self.id}, user_id={self.user_id}, type='{self.workout_type}')>"
+
+
+class RunningLog(Base):
+    """SQLAlchemy Model for the 'running_logs' table."""
+    __tablename__ = "running_logs"
+
+    # CORE FIELDS
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    created_at: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True),
+                                                          default=datetime.datetime.now(
+                                                              datetime.UTC))
+    updated_at: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True),
+                                                          default=datetime.datetime.now(
+                                                              datetime.UTC),
+                                                          onupdate=datetime.datetime.now(
+                                                              datetime.UTC))
+    running_date: Mapped[datetime.date] = mapped_column(Date)
+
+    # Foreign Key
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+
+    # Log details (Fields matching Pydantic schema)
+    distance_km: Mapped[float] = mapped_column(Float)
+    duration_min: Mapped[float] = mapped_column(Float)
+    avg_heart_rate: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    run_type: Mapped[str] = mapped_column(String(50), default="Easy")
+
+    # Calculated Field
+    pace_min_per_km: Mapped[float] = mapped_column(Float)
+
+    # Relationship
+    user: Mapped["User"] = relationship("User", back_populates="running_logs")
+
+    def __repr__(self):
+        return f"<RunningLog(id={self.id}, user_id={self.user_id}, distance={self.distance_km})>"

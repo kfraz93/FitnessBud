@@ -120,6 +120,14 @@ Verify by navigating to `http://127.0.0.1:8000/docs`
 | [ ]    | 7. Deploy on Render/Railway or similar cloud platform.                     | Set up cloud deployment pipeline.                                                                                                           |
 | [ ]    | 8. Document project with README, architecture diagram, and demo video/GIF. | Final documentation and presentation assets.                                                                                                |
 | [ ]    | 9. Optimize Docker Build Speed (UV Multi-Stage)                            | Implement a Docker multi-stage build using UV to dramatically reduce dependency installation time.                                          |
-| [ ]    | 10. Define Running App Data Model (New Feature)                            | Define new SQLAlchemy RunLog model (Distance, Duration, HR) to enable meaningful ML.                                                        |
-| [ ]    | 11. Implement Running App Core Services                                    | Create new domain/service and repository layers for the RunLog entity.                                                                      |
-| [ ]    | 12. Implement Pace Prediction ML Model                                     | Retrain Scikit-learn model as a Regression model to predict optimal pace/duration.                                                          |
+| [x]    | 10. Define Running App Data Model (New Feature)                            | Define new SQLAlchemy RunLog model (Distance, Duration, HR) to enable meaningful ML.                                                        |
+| [x]    | 11. Implement Running App Core Services                                    | Create new domain/service and repository layers for the RunLog entity.                                                                      |
+| [x]    | 12. Implement Pace Prediction ML Model                                     | Retrain Scikit-learn model as a Regression model to predict optimal pace/duration.                                                          |
+| [x]    | 13. Lifespan Integration Completed                                         | Both ML models now load automatically on application startup.                                                                               |
+
+| Status | Task                 | Description                                                                                            |
+|:-------|:---------------------|:-------------------------------------------------------------------------------------------------------|
+| [ ]    | 1. Unit Test:        | Running Service Logic,"Test pace calculations, rolling average handling, and repository mocks."        |
+| [ ]    | 2. Unit Test:        | Running ML Adapter,Verify the adapter handles invalid inputs and model-not-found scenarios gracefully. |
+| [ ]    | 3. Integration Test  | Running API,Test the /v1/running_logs endpoints with a test database (using pytest-asyncio).           |
+| [ ]    | 4. ML Validation     | Create a test suite to ensure the recommended pace evolves logically as more runs are logged.          |
