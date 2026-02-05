@@ -1,0 +1,12 @@
+[run]
+source =
+    domain
+    infrastructure
+omit =
+    tests/*
+    **/__init__.py
+    infrastructure/migrations/*
+
+[report]
+show_missing = True
+precision = 2

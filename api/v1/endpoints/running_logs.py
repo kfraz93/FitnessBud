@@ -72,6 +72,33 @@ async def get_all_logs(
     )
     return [RunningLogOut.model_validate(log) for log in db_logs]
 
+# 6. ML PREDICTION (GET) - Moved from old logic
+@router.get("/recommend_pace", response_model=float, summary="Predict recommended running pace")
+async def get_recommended_pace(
+    distance_km: float,
+    current_user: UserOut = Depends(get_current_user), # noqa: B008
+    service: RunningLogService = Depends(get_running_log_service) # noqa: B008
+):
+    """
+    Predicts and returns the recommended pace (min/km) for the given distance
+    based on historical data and the trained ML model.
+    """
+    # Validation check can be moved to the service or kept here
+    if distance_km <= 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Distance must be greater than zero."
+        )
+
+    # Assuming the service method name will be consistent
+    recommended_pace = await service.predict_recommended_pace(
+        user_id=current_user.id,
+        distance_km=distance_km
+    )
+
+    # Return pace rounded to two decimal places
+    return round(recommended_pace, 2)
+
 
 # 3. READ ONE (GET) - Added for consistency
 @router.get(
@@ -133,29 +160,3 @@ async def delete_log(
         user_id=current_user.id
     )
 
-# 6. ML PREDICTION (GET) - Moved from old logic
-@router.get("/recommend_pace", response_model=float, summary="Predict recommended running pace")
-async def get_recommended_pace(
-    distance_km: float,
-    current_user: UserOut = Depends(get_current_user), # noqa: B008
-    service: RunningLogService = Depends(get_running_log_service) # noqa: B008
-):
-    """
-    Predicts and returns the recommended pace (min/km) for the given distance
-    based on historical data and the trained ML model.
-    """
-    # Validation check can be moved to the service or kept here
-    if distance_km <= 0:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Distance must be greater than zero."
-        )
-
-    # Assuming the service method name will be consistent
-    recommended_pace = await service.predict_recommended_pace(
-        user_id=current_user.id,
-        distance_km=distance_km
-    )
-
-    # Return pace rounded to two decimal places
-    return round(recommended_pace, 2)
