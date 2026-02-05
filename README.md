@@ -1,4 +1,5 @@
 # 🏋️ FitnessBud – AI-Powered Backend Recommendation API
+[![codecov](https://codecov.io/github/kfraz93/FitnessBud/graph/badge.svg?token=LVPWJ78VI2)](https://codecov.io/github/kfraz93/FitnessBud)
 
 FitnessBud is a production-grade backend application built with **FastAPI** and **Hexagonal Architecture** (Ports and Adapters). It features secure JWT authentication, PostgreSQL persistence via SQLAlchemy, and an integrated machine learning component. The project is fully containerized using Docker for consistent, repeatable deployment.
 
