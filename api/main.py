@@ -74,7 +74,7 @@ async def root():
 
 # --- Configure Templates and Static Files ---
 # Mount the static directory to serve CSS/JS
-app.mount("/static", StaticFiles(directory="static"), name="static")
+# app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # Configure the Jinja2 template directory
 templates = Jinja2Templates(directory="templates")
